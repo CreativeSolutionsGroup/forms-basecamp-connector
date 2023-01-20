@@ -9,6 +9,7 @@
  */
 
 export interface Env {
+	BASECAMP_ACCESS_TOKEN: string;
 }
 
 export default {
@@ -17,7 +18,27 @@ export default {
 		env: Env,
 		ctx: ExecutionContext
 	): Promise<Response> {
-		console.log(JSON.stringify(await request.json()))
+		let formJson = { "Title": "", "Description": "", "Date due": "" };
+		formJson = await request.json();
+		let baseCampData = {
+			"content": formJson["Title"],
+			"description": formJson["Description"],
+			"due_on": formJson["Date due"]
+		};
+		console.log("Sending the following data on to basecamp")
+		console.log(JSON.stringify(baseCampData))
+		const response = await fetch(
+			"https://3.basecampapi.com/5395843/buckets/28388324/todolists/5749130391/todos.json", {
+			method: 'POST',
+			headers: new Headers({
+				"Authorization": "Bearer " + env.BASECAMP_ACCESS_TOKEN,
+				"Content-Type": "application/json",
+				"Accept": "*/*",
+				"User-Agent": "Forms to basecamp adapter (alexandertaylor@cedarville.edu)"
+			}), 
+			body: JSON.stringify(baseCampData)
+		})
+		console.log("Received response " + response.status)
 		return new Response("200/OK");
 	},
 };
