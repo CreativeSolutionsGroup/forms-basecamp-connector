@@ -18,7 +18,7 @@ export default {
 		env: Env,
 		ctx: ExecutionContext
 	): Promise<Response> {
-		let formJson = { "Title": "", "Description": "", "Date due": "" };
+		let formJson = { "Title": "", "Description": "", "Date due": "", "projectId": "", "listId": "" };
 		formJson = await request.json();
 		let baseCampData = {
 			"content": formJson["Title"],
@@ -27,15 +27,16 @@ export default {
 		};
 		console.log("Sending the following data on to basecamp")
 		console.log(JSON.stringify(baseCampData))
+		let basecampURL = "https://3.basecampapi.com/5395843/buckets/" + formJson.projectId + "/todolists/" + formJson.listId + "/todos.json";
 		const response = await fetch(
-			"https://3.basecampapi.com/5395843/buckets/28388324/todolists/5749130391/todos.json", {
+			basecampURL, {
 			method: 'POST',
 			headers: new Headers({
 				"Authorization": "Bearer " + env.BASECAMP_ACCESS_TOKEN,
 				"Content-Type": "application/json",
 				"Accept": "*/*",
 				"User-Agent": "Forms to basecamp adapter (alexandertaylor@cedarville.edu)"
-			}), 
+			}),
 			body: JSON.stringify(baseCampData)
 		})
 		console.log("Received response " + response.status)
