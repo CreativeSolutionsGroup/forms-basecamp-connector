@@ -20,15 +20,12 @@ export default {
 	): Promise<Response> {
 		let formJson = { "Title": "", "Description": "", "Date due": "", "projectId": "", "listId": "" };
 		formJson = await request.json();
-		if (formJson["Date due"] === "") {
-			const nextWeek = new Date();
-			nextWeek.setDate(new Date().getDate() + 7)
-			formJson["Date due"] = nextWeek.toISOString().substring(0, 10);
-		}
+		const nextWeek = new Date();
+		nextWeek.setDate(new Date().getDate() + 7)
 		let baseCampData = {
 			"content": formJson["Title"],
 			"description": formJson["Description"],
-			"due_on": formJson["Date due"]
+			"due_on": formJson["Date due"] === "" ? nextWeek.toISOString().substring(0, 10) : formJson["Date due"]
 		};
 		console.log("Sending the following data on to basecamp")
 		console.log(JSON.stringify(baseCampData))
