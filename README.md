@@ -4,22 +4,72 @@ This repo has the code for a Cloudflare worker to connect a Google form and its 
 
 Instructions for implementing this on a Google form are below.
 
-1. There are three important parts of the Google form that must be included to ensure that the connector will work well. These must be named exactly as follows to ensure proper operation.
-```
-Title
-Description
-Date due
-```
-2. Once the form has been created, click on the three dots in the top right corner of the page, and then choose `Script Editor`.
-3. After the script editor opens, click on the plus sign next to the `Libraries` label. Once the popup opens, enter `1aWGQVeuAeqOLbTP8yqv0wOn9Yvo7iDu2hHk8gTXgdWMXpQgd-83XGS9H` and click `Look Up`.
-4. Click `Add` and you will be returned to the main window.
-5. Copy and paste the following code into the editor.
+1. Navigate to the form in edit mode and then click on this button
+
+<img src="./images/create_script.png" />
+
+2. Once the script has been created, name it whatever you wish.
+3. Copy and paste the following code into your script file
 ```javascript
-var POST_URL = "https://forms-basecamp-link.creativesolutions.workers.dev/"
+const postUrl = "https://forms-basecamp-link.creativesolutions.workers.dev/"
 
 function onSubmit(e) {
-  FormsCloudflareLibrary.sendToCloudflare(POST_URL, FormApp.getActiveForm(), "<project_id>", "<list_id>");
 }
 ```
-6. Where there are angle brackets, enter the project and list IDs. These can be found in the URL after navigating to the list in Basecamp.
-7. You should be all set!
+4. Now add the library to the project. 
+Once you click the `+` icon next to the `Libraries` header you will be greeted with a modal that wants you to put in a project ID.
+The ID of the library is `1klv2AvLhl7gGeBTJjItWbnLeKS5gRcg1jWXEpmchs27gKkBxV1gvlFaG`.
+5. Add a trigger so that the script runs whenever a user submits the form.
+
+<img src="./images/go_to_trigger.png" />
+
+6. Click on the `+ Add Trigger` button in the bottom right hand corner. 
+7. Once the dialog opens up, change it's settings so that it looks like the picture below.
+
+<img src="./images/trigger_settings.png" />
+
+8. Click save and then agree to let the app access the form in the popup.
+9. Now it's time to start coding. 
+
+You can access the form using `FormApp.getActiveForm()`.
+There's a helper function included in the library for itemizing the form into a map.
+You can call that using `CloudflareLibrary.getFormItems(FormApp.getActiveForm())`.
+An example of what can be done with this library is below.
+
+## Example AppScript Implementation
+```javascript
+const postUrl = "https://forms-basecamp-link.creativesolutions.workers.dev/"
+const locations = {
+  "Graphic": "5923891441",
+  "Video": "5924038563",
+  "Photo": "5924039801",
+  "Social": "5924041099",
+}
+
+function onSubmit(e) {
+  const formItems = CloudflareLibrary.getFormItems(FormApp.getActiveForm());
+  const requestType = formItems["Request Type"].split(" ")[0];
+
+  let content = `
+    <h1>${formItems["Event/Service/Program Name"]}</h1>
+    <h2>${formItems["Event/Service/Program Date"]}</h3>
+    <h3>Customer:</h3>
+    <p>${formItems["Event/Service/Program Desired Customer"]}</p>
+    <h3>Description & Creative Ideation</h3>
+    <p>${formItems["Event/Service/Program Description & Creative Ideation"]}</p>
+    <h3>Graphic Desgin Assets Requested</h3>
+    <p>${formItems["Event/Service/Program Graphic Design Asset Requested"].reduce((previous, current) => `${previous}${current}, `, "").slice(0, -2)}</p>
+    <h3>This request has ${formItems["Approved by your Group Leader"] === "Yes" ? "" : "not "}been approved by the requester's group leader</h3>
+  `;
+
+  CloudflareLibrary.sendDataToCloudflare({
+    postURL,
+    type: "card_table",
+    projectId: "31912256",
+    subId: locations[requestType],
+    title: `${formItems["Event/Service/Program Name"]} Request`,
+    content,
+    due_on: formItems["Proposed Due Date"],
+  });
+}
+```
