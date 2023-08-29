@@ -34,25 +34,29 @@ type RequestData = {
   type: string;
   projectId: string;
   subId: string;
+  assignee_ids?: Array<number>;
 };
 
-type BasecampSpecificData = {
+type BasecampCardData = {
   title: string;
   content: string;
   due_on: string;
+  assignee_ids?: Array<number>;
 };
 
 type BasecampListData = {
   content: string;
   description: string;
   due_on: string;
+  assignee_ids?: Array<number>;
 };
 
-const toListData = (data: BasecampSpecificData) => {
+const toListData = (data: BasecampCardData) => {
   return {
     content: data.title,
     description: data.content,
     due_on: data.due_on,
+    assignee_ids: data.assignee_ids,
   } as BasecampListData;
 };
 
@@ -119,7 +123,7 @@ export default {
       body: JSON.stringify(
         formJson.type === "list"
           ? toListData(formJson)
-          : (formJson as BasecampSpecificData)
+          : (formJson as BasecampCardData)
       ),
     });
     console.log("Received response " + response.status);
